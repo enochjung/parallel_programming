@@ -40,8 +40,15 @@ object VerticalBoxBlur extends VerticalBoxBlurInterface:
    *  bottom.
    */
   def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit =
-    // TODO implement this method using the `boxBlurKernel` method
-    ???
+    val height = src.height
+    var j = 0
+    while j < height do
+      var i = from
+      while i < end do
+        val bluredColor = boxBlurKernel(src, i, j, radius)
+        dst.update(i, j, bluredColor)
+        i += 1
+      j += 1
 
   /** Blurs the columns of the source image in parallel using `numTasks` tasks.
    *
@@ -50,6 +57,9 @@ object VerticalBoxBlur extends VerticalBoxBlurInterface:
    *  columns.
    */
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit =
-    // TODO implement using the `task` construct and the `blur` method
-    ???
+    val maximumTasks = numTasks.min(src.width)
+    val range = (0 to src.width by src.width/maximumTasks) :+ src.width
+    val pair = range.init zip range.tail
+    val tasks = pair.map(p => task { blur(src, dst, p._1, p._2, radius)})
+    tasks.foreach(t => t.join())
 
